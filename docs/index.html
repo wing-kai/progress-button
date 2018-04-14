@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Progress Button</title>
+  <style>
+    svg {
+      cursor: default;
+      transition: all 300ms;
+    }
+    svg:active {
+      transform: scale(0.9);
+    }
+    svg > path {
+      transition: all 300ms;
+      stroke: #3384C6;
+      fill: none;
+    }
+    circle {
+      transition: all 600ms;
+    }
+  </style>
+</head>
+<body>
+  <svg style="display:none" :style="{display:'block'}" id="progress-button" @click="handleClick" width="100" height="35" viewBox="0 0 200 70" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <path v-if="(status === 1) || (status === 2) || (status === 3)" stroke-width="3" d="M100.1,65h-0.1C83.4,65,70,51.6,70,35.1v-0.1C70,18.4,83.4,5,99.9,5h0.1C116.6,5,130,18.4,130,34.9v0.1C130,51.6,116.6,65,100.1,65z"></path>
+    <path v-else stroke-width="3" d="M185.5,65h-171C9.2,65,5,60.8,5,55.5v-41C5,9.2,9.2,5,14.5,5h171c5.2,0,9.5,4.2,9.5,9.5v41C195,60.8,190.8,65,185.5,65z"></path>
+    <circle v-if="showRing" :stroke-dashoffset="171 - (171*progress)" stroke-dasharray="171" transform="rotate(270, 100, 35)" stroke="#3384C6" fill="none" stroke-width="5" cx="100" cy="35" r="27.1"/>
+    <text v-if="showText" stroke="none" fill="#3384C6" transform="matrix(1 0 0 1 46.0725 42.5359)" font-family="'PingFangSC-Light-GBpc-EUC-H'" font-size="24px">Download</text>
+  </svg>
+  <script src="https://cdn.bootcss.com/vue/2.5.13/vue.min.js"></script>
+  <script>
+    new Vue({
+      el: '#progress-button',
+      data() {
+        return {
+          status: 0, // 0:ready 1:clicked 2:downloading 3:canceling 4:reverting
+          clickable: true,
+          showText: true,
+          showRing: false,
+          progress: 0
+        }
+      },
+      methods: {
+        handleClick() {
+          if (this.status === 1 || (this.status === 3) || (this.status === 4)) {
+            return
+          }
+
+          if (this.status === 0) {
+            this.status = 1
+            this.showText = false
+            setTimeout(() => {
+              this.status = 2
+              this.progress = 0
+              this.showRing = true
+              this.handleIncreaseProgress()
+            }, 300)
+          } else if (this.status === 2) {
+            this.progressTimers.forEach(timer => clearTimeout(timer))
+            this.status = 3
+            this.showText = false
+            this.progress = 0
+            setTimeout(() => this.reverting(), 600)
+          }
+        },
+        reverting() {
+          this.status = 4
+          this.showRing = false
+          this.progress = 0
+          setTimeout(() => {
+            this.status = 0
+            this.showText = true
+          }, 300)
+        },
+        handleIncreaseProgress() {
+          this.progressTimers = [
+            setTimeout(() => { this.handleChangeProgress(0.25); }, 1000),
+            setTimeout(() => { this.handleChangeProgress(0.75); }, 2000),
+            setTimeout(() => { this.handleChangeProgress(1); }, 3000),
+            setTimeout(this.reverting, 4000)
+          ]
+        },
+        handleChangeProgress(progress) {
+          this.progress = progress
+        }
+      }
+    })
+  </script>
+</body>
+</html>
